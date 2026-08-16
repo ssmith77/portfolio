@@ -27,6 +27,11 @@ export default function EntityPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [formState, setFormState] = useState({ title: '', description: '', priority: '2', dueDate: '', status: 'todo' });
+  const taskStatusOptions = [
+    { value: 'todo', label: 'Todo' },
+    { value: 'in_progress', label: 'In progress' },
+    { value: 'done', label: 'Complete' },
+  ];
 
   useEffect(() => {
     const token = localStorage.getItem('tasks-admin-token');
@@ -225,43 +230,72 @@ export default function EntityPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold text-slate-900">Tasks</h2>
           <div className="space-y-4">
-            {tasks.map((task) => (
-              <div key={task.id} className="rounded-xl border border-slate-200 p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-lg font-semibold text-slate-900">{task.title}</p>
-                    {task.description ? <p className="text-sm text-slate-600">{task.description}</p> : null}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={task.status}
-                      onChange={(event) => updateStatus(task.id, event.target.value)}
-                      className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-                    >
-                      <option value="todo">todo</option>
-                      <option value="in_progress">in progress</option>
-                      <option value="done">done</option>
-                    </select>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">P{task.priority}</span>
-                  </div>
-                </div>
+            {tasks.map((task) => {
+              const isComplete = task.status === 'done';
+              return (
+                <div key={task.id} className={`rounded-xl border p-4 transition ${isComplete ? 'border-emerald-200 bg-emerald-50/50' : 'border-slate-200 bg-white'}`}>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="flex flex-1 items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isComplete}
+                        onChange={() => updateStatus(task.id, isComplete ? 'todo' : 'done')}
+                        className="mt-1 h-5 w-5 accent-emerald-600"
+                        aria-label={`Mark ${task.title} complete`}
+                      />
+                      <div className="flex-1">
+                        <p className={`text-lg font-semibold ${isComplete ? 'text-slate-500 line-through' : 'text-slate-900'}`}>{task.title}</p>
+                        {task.description ? <p className="text-sm text-slate-600">{task.description}</p> : null}
+                      </div>
+                    </div>
 
-                {task.subtasks.length > 0 ? (
-                  <div className="mt-4 space-y-2">
-                    {task.subtasks.map((subtask) => (
-                      <label key={subtask.id} className="flex items-center gap-2 text-sm text-slate-700">
-                        <input
-                          type="checkbox"
-                          checked={subtask.done}
-                          onChange={() => toggleSubtask(task.id, subtask.id, !subtask.done)}
-                        />
-                        <span className={subtask.done ? 'line-through text-slate-400' : ''}>{subtask.text}</span>
-                      </label>
-                    ))}
+                    <div className="flex items-center gap-2 md:pt-1">
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">P{task.priority}</span>
+                    </div>
                   </div>
-                ) : null}
-              </div>
-            ))}
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {taskStatusOptions.map((option) => {
+                      const active = task.status === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => updateStatus(task.id, option.value)}
+                          className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                            active
+                              ? option.value === 'done'
+                                ? 'border-emerald-400 bg-emerald-500 text-white'
+                                : option.value === 'in_progress'
+                                  ? 'border-cyan-400 bg-cyan-500 text-white'
+                                  : 'border-slate-400 bg-slate-700 text-white'
+                              : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-800'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {task.subtasks.length > 0 ? (
+                    <div className="mt-4 space-y-2">
+                      {task.subtasks.map((subtask) => (
+                        <label key={subtask.id} className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={subtask.done}
+                            onChange={() => toggleSubtask(task.id, subtask.id, !subtask.done)}
+                            className="h-4 w-4 accent-emerald-600"
+                          />
+                          <span className={subtask.done ? 'line-through text-slate-400' : ''}>{subtask.text}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </section>
       </div>
