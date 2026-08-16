@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Entity {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  notes String?
+  tasks Task[]
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  entityId    Int
+  entity      Entity    @relation(fields: [entityId], references: [id])
+  title       String
+  description String?
+  status      String    @default("todo")
+  priority    Int       @default(2)
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  subtasks    Subtask[]
+}
+
+model Subtask {
+  id     Int     @id @default(autoincrement())
+  taskId Int
+  task   Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  text   String
+  done   Boolean @default(false)
+}
+
+model Template {
+  id    Int           @id @default(autoincrement())
+  name  String        @unique
+  items TemplateItem[]
+}
+
+model TemplateItem {
+  id          Int      @id @default(autoincrement())
+  templateId  Int
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  order       Int
+}
